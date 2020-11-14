@@ -1,4 +1,4 @@
-/*
+﻿/*
 Copyright (c) 2016 Alex Vargas
 
 This software is provided 'as-is', without any express or implied
@@ -196,9 +196,9 @@ void testEnumeration()
 {
     runsystem("reg import addtest.reg", ERROR_IMPORT_TESTREGISTRY);
 
-    auto wvec = winreg::enumerateProperties(HKEY_LOCAL_MACHINE, L"Software\\winregtest");
+    auto wvec = winreg::enumerateProperties(HKEY_LOCAL_MACHINE, L"Software\\winregtest", KEY_WOW64_64KEY);
 
-    assert(wvec.size() == 8, ERROR_CREATEKEY);
+    assert(wvec.size() == 13, ERROR_CREATEKEY);
     auto wit = std::find(wvec.begin(), wvec.end(), L"");
     assert(wit != wvec.end(), ERROR_ENUMERATEPROPERTIES);
     wit = std::find(wvec.begin(), wvec.end(), L"test string");
@@ -218,7 +218,7 @@ void testEnumeration()
     wit = std::find(wvec.begin(), wvec.end(), L"test missing");
     assert(wit == wvec.end(), ERROR_ENUMERATEPROPERTIES);
 
-    auto vec = winreg::enumerateProperties(HKEY_LOCAL_MACHINE, "Software\\winregtest");
+    auto vec = winreg::enumerateProperties(HKEY_LOCAL_MACHINE, "Software\\winregtest", KEY_WOW64_32KEY);
 
     assert(vec.size() == 8, ERROR_CREATEKEY);
     auto it = std::find(vec.begin(), vec.end(), "");
@@ -344,22 +344,22 @@ void testGetString()
 	runsystem("reg import addtest.reg", ERROR_IMPORT_TESTREGISTRY);
 
     auto wr = winreg::getString(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"Test string", L"failed");
-    assert(wr == L"64 qwerty ������", ERROR_GETSTRING);
+    assert(wr == L"64 qwerty äçÇàõñ", ERROR_GETSTRING);
 
     wr = winreg::getString(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"Test string", L"failed", KEY_WOW64_64KEY);
-    assert(wr == L"64 qwerty ������", ERROR_GETSTRING);
+    assert(wr == L"64 qwerty äçÇàõñ", ERROR_GETSTRING);
 
     wr = winreg::getString(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"Test string", L"failed", KEY_WOW64_32KEY);
-    assert(wr == L"32 qwerty ������", ERROR_GETSTRING);
+    assert(wr == L"32 qwerty äçÇàõñ", ERROR_GETSTRING);
 
     auto r = winreg::getString(HKEY_LOCAL_MACHINE, "Software\\winregtest", "Test string", "failed");
-    assert(wstring_from_utf8(r) == L"64 qwerty ������", ERROR_GETSTRING);
+    assert(wstring_from_utf8(r) == L"64 qwerty äçÇàõñ", ERROR_GETSTRING);
 
     r = winreg::getString(HKEY_LOCAL_MACHINE, "Software\\winregtest", "Test string", "failed", KEY_WOW64_64KEY);
-    assert(wstring_from_utf8(r) == L"64 qwerty ������", ERROR_GETSTRING);
+    assert(wstring_from_utf8(r) == L"64 qwerty äçÇàõñ", ERROR_GETSTRING);
 
     r = winreg::getString(HKEY_LOCAL_MACHINE, "Software\\winregtest", "Test string", "failed", KEY_WOW64_32KEY);
-    assert(wstring_from_utf8(r) == L"32 qwerty ������", ERROR_GETSTRING);
+    assert(wstring_from_utf8(r) == L"32 qwerty äçÇàõñ", ERROR_GETSTRING);
 	
     runsystem("reg import deltest.reg", ERROR_REMOVE_TESTREGISTRY);
 }
@@ -368,30 +368,29 @@ void testSetString()
 {
     runsystem("reg import addtest.reg", ERROR_IMPORT_TESTREGISTRY);
 
-    assert(winreg::setString(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"Test string", L"����"), ERROR_SETSTRING);
+    assert(winreg::setString(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"Test string", L""), ERROR_SETSTRING);
     auto wr = winreg::getString(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"Test string", L"failed");
-    assert(wr == L"����", ERROR_SETSTRING);
+    assert(wr == L"", ERROR_SETSTRING);
 
-    assert(winreg::setString(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"Test string", L"ab�", KEY_WOW64_64KEY), ERROR_SETSTRING);
+    assert(winreg::setString(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"Test string", L"abç", KEY_WOW64_64KEY), ERROR_SETSTRING);
     wr = winreg::getString(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"Test string", L"failed", KEY_WOW64_64KEY);
-    assert(wr == L"ab�", ERROR_SETSTRING);
+    assert(wr == L"abç", ERROR_SETSTRING);
 
-    assert(winreg::setString(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"Test string", L",.;�", KEY_WOW64_32KEY), ERROR_SETSTRING);
+    assert(winreg::setString(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"Test string", L",.;Ç", KEY_WOW64_32KEY), ERROR_SETSTRING);
     wr = winreg::getString(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"Test string", L"failed", KEY_WOW64_32KEY);
-    assert(wr == L",.;�", ERROR_SETSTRING);
+    assert(wr == L",.;Ç", ERROR_SETSTRING);
 
-    
-    assert(winreg::setString(HKEY_LOCAL_MACHINE, "Software\\winregtest", "Test string", utf8_from_wstring(L"����")), ERROR_SETSTRING);
+    assert(winreg::setString(HKEY_LOCAL_MACHINE, "Software\\winregtest", "Test string", utf8_from_wstring(L"ñÕõÑ")), ERROR_SETSTRING);
     auto r = winreg::getString(HKEY_LOCAL_MACHINE, "Software\\winregtest", "Test string", "failed");
-    assert(wstring_from_utf8(r) == L"����", ERROR_SETSTRING);
+    assert(wstring_from_utf8(r) == L"ñÕõÑ", ERROR_SETSTRING);
 
-    assert(winreg::setString(HKEY_LOCAL_MACHINE, "Software\\winregtest", "Test string", utf8_from_wstring(L"ab�"), KEY_WOW64_64KEY), ERROR_SETSTRING);
+    assert(winreg::setString(HKEY_LOCAL_MACHINE, "Software\\winregtest", "Test string", utf8_from_wstring(L"abû"), KEY_WOW64_64KEY), ERROR_SETSTRING);
     r = winreg::getString(HKEY_LOCAL_MACHINE, "Software\\winregtest", "Test string", "failed", KEY_WOW64_64KEY);
-    assert(wstring_from_utf8(r) == L"ab�", ERROR_SETSTRING);
+    assert(wstring_from_utf8(r) == L"abû", ERROR_SETSTRING);
 
-    assert(winreg::setString(HKEY_LOCAL_MACHINE, "Software\\winregtest", "Test string", utf8_from_wstring(L",.;�"), KEY_WOW64_32KEY), ERROR_SETSTRING);
+    assert(winreg::setString(HKEY_LOCAL_MACHINE, "Software\\winregtest", "Test string", utf8_from_wstring(L",.;§"), KEY_WOW64_32KEY), ERROR_SETSTRING);
     r = winreg::getString(HKEY_LOCAL_MACHINE, "Software\\winregtest", "Test string", "failed", KEY_WOW64_32KEY);
-    assert(wstring_from_utf8(r) == L",.;�", ERROR_SETSTRING);
+    assert(wstring_from_utf8(r) == L",.;§", ERROR_SETSTRING);
 
     runsystem("reg import deltest.reg", ERROR_REMOVE_TESTREGISTRY);
 }
@@ -528,10 +527,10 @@ void testSetMultiString()
 
     vector<wstring> wval;
     wval.push_back(L"");
-    wval.push_back(L"�all0�");
+    wval.push_back(L"¢all0º");
     wval.push_back(L"");
-    wval.push_back(L"�6�");
-    wval.push_back(L"���");
+    wval.push_back(L"çãmò");
+    wval.push_back(L"¹²³");
     wval.push_back(L"abcdefghijklmnopqrstuvwxYZ");
 
     assert(winreg::setMultiString(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test multistring", wval), ERROR_SETMULTISTRING);
@@ -539,17 +538,17 @@ void testSetMultiString()
     wval.clear();
     assert(winreg::getMultiString(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test multistring", wval), ERROR_SETMULTISTRING);
     assert(wval.size() == 4, ERROR_SETMULTISTRING);
-    assert(wval[0] == L"�all0�", ERROR_SETMULTISTRING);
-    assert(wval[1] == L"�6�", ERROR_SETMULTISTRING);
-    assert(wval[2] == L"���", ERROR_SETMULTISTRING);
+    assert(wval[0] == L"¢all0º", ERROR_SETMULTISTRING);
+    assert(wval[1] == L"çãmò", ERROR_SETMULTISTRING);
+    assert(wval[2] == L"¹²³", ERROR_SETMULTISTRING);
     assert(wval[3] == L"abcdefghijklmnopqrstuvwxYZ", ERROR_SETMULTISTRING);
 
     vector<string> val;
     val.push_back("");
-    val.push_back(utf8_from_wstring(L"�l0�"));
+    val.push_back(utf8_from_wstring(L"¢l0º"));
     val.push_back("");
-    val.push_back(utf8_from_wstring(L"�6�"));
-    val.push_back(utf8_from_wstring(L"���"));
+    val.push_back(utf8_from_wstring(L"çãò"));
+    val.push_back(utf8_from_wstring(L"¹²³"));
     val.push_back("");
 
     assert(winreg::setMultiString(HKEY_LOCAL_MACHINE, "Software\\winregtest", "test multistring", val), ERROR_SETMULTISTRING);
@@ -557,9 +556,9 @@ void testSetMultiString()
     val.clear();
     assert(winreg::getMultiString(HKEY_LOCAL_MACHINE, "Software\\winregtest", "test multistring", val), ERROR_SETMULTISTRING);
     assert(val.size() == 3, ERROR_SETMULTISTRING);
-    assert(wstring_from_utf8(val[0]) == L"�l0�", ERROR_SETMULTISTRING);
-    assert(wstring_from_utf8(val[1]) == L"�6�", ERROR_SETMULTISTRING);
-    assert(wstring_from_utf8(val[2]) == L"���", ERROR_SETMULTISTRING);
+    assert(wstring_from_utf8(val[0]) == L"¢l0º", ERROR_SETMULTISTRING);
+    assert(wstring_from_utf8(val[1]) == L"çãò", ERROR_SETMULTISTRING);
+    assert(wstring_from_utf8(val[2]) == L"¹²³", ERROR_SETMULTISTRING);
 
     runsystem("reg import deltest.reg", ERROR_REMOVE_TESTREGISTRY);
 }
@@ -751,6 +750,12 @@ void testGetBinary()
     s = winreg::getBinaryAsBase64(HKEY_LOCAL_MACHINE, "Software\\winregtest", "test binary", "", KEY_WOW64_32KEY);
     assert(s == "MgEjRWeJq83v//7cuph2VDIQ", ERROR_GETBINARY);
 
+    string binary;
+    unsigned char expected[] = { 0x64, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0xff, 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10 };
+    assert(winreg::getBinary(HKEY_LOCAL_MACHINE, "Software\\winregtest", "test binary", binary, KEY_WOW64_64KEY), ERROR_GETBINARY);
+    assert(binary.length() == 18, ERROR_GETBINARY);
+    for (int i = 0; i < binary.length(); ++i) assert((char)expected[i] == binary[i], ERROR_GETBINARY);
+
     runsystem("reg import deltest.reg", ERROR_REMOVE_TESTREGISTRY);
 }
 
@@ -781,6 +786,111 @@ void testSetBinary()
     assert(winreg::setBinaryFromBase64(HKEY_LOCAL_MACHINE, "Software\\winregtest", "test binary", "j964T9/Y7fzY7bmI7t36", KEY_WOW64_32KEY), ERROR_SETBINARY);
     s = winreg::getBinaryAsBase64(HKEY_LOCAL_MACHINE, "Software\\winregtest", "test binary", "", KEY_WOW64_32KEY);
     assert(s == "j964T9/Y7fzY7bmI7t36", ERROR_SETBINARY);
+
+    string binary, binary2;
+    unsigned char data[] = { 0x64, 0x01, 0x23, 0x00, 0xab, 0xcd, 0xef, 0xff, 0x00, 0xdc, 0x10 };
+    for (int i = 0; i < 11; ++i) binary.push_back(data[i]);
+    assert(binary.length() == 11, ERROR_SETBINARY);
+    assert(winreg::setBinary(HKEY_LOCAL_MACHINE, "Software\\winregtest", "test binary", binary.c_str(), binary.length(), KEY_WOW64_64KEY), ERROR_SETBINARY);
+    assert(winreg::getBinary(HKEY_LOCAL_MACHINE, "Software\\winregtest", "test binary", binary2, KEY_WOW64_64KEY), ERROR_SETBINARY);
+    assert(binary2.length() == 11, ERROR_SETBINARY);
+    for (int i = 0; i < binary2.length(); ++i) assert((char)data[i] == binary2[i], ERROR_SETBINARY);
+    assert(binary == binary2, ERROR_SETBINARY);
+
+    runsystem("reg import deltest.reg", ERROR_REMOVE_TESTREGISTRY);
+}
+
+
+
+void testGetOther()
+{
+    runsystem("reg import addtest.reg", ERROR_IMPORT_TESTREGISTRY);
+    unsigned long type;
+    auto s = winreg::getAsBase64ByteArray(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test reg_none", "", type, KEY_WOW64_64KEY);
+    assert(type == REG_NONE, ERROR_GETOTHER);
+    assert(s == "ZAEjRWeJq83v//7cuph2VDIQ", ERROR_GETOTHER);
+
+    s.clear();
+    s = winreg::getAsBase64ByteArray(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test reg_link", "", type, KEY_WOW64_64KEY);
+    assert(type == REG_LINK, ERROR_GETOTHER);
+    assert(s == "ZAAjAFQyEA==", ERROR_GETOTHER);
+
+    s.clear();
+    s = winreg::getAsBase64ByteArray(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test REG_RESOURCE_LIST", "", type, KEY_WOW64_64KEY);
+    assert(type == REG_RESOURCE_LIST, ERROR_GETOTHER);
+    assert(s == "ZAEjRWeJq83v//7cuph2VDIQ", ERROR_GETOTHER);
+
+    s.clear();
+    s = winreg::getAsBase64ByteArray(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test REG_FULL_RESOURCE_DESCRIPTOR", "", type, KEY_WOW64_64KEY);
+    assert(type == REG_FULL_RESOURCE_DESCRIPTOR, ERROR_GETOTHER);
+    assert(s == "ZAEjRWeJq83v//7cuph2VDIQ", ERROR_GETOTHER);
+
+    s.clear();
+    s = winreg::getAsBase64ByteArray(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test REG_RESOURCE_REQUIREMENTS_LIST", "", type, KEY_WOW64_64KEY);
+    assert(type == REG_RESOURCE_REQUIREMENTS_LIST, ERROR_GETOTHER);
+    assert(s == "ZAEjRWeJq83v//7cuph2VDIQ", ERROR_GETOTHER);
+
+    s.clear();
+    unsigned char expected[] = { 0x64, 0x00, 0x23, 0x00, 0x54, 0x32, 0x10 };
+    assert(winreg::getAsByteArray(HKEY_LOCAL_MACHINE, "Software\\winregtest", "test reg_link", s, type, KEY_WOW64_64KEY), ERROR_GETOTHER);
+    assert(type == REG_LINK, ERROR_GETOTHER);
+    assert(s.length() == 7, ERROR_GETOTHER);
+    for (int i = 0; i < s.length(); ++i) assert((char)expected[i] == s[i], ERROR_GETOTHER);
+
+    runsystem("reg import deltest.reg", ERROR_REMOVE_TESTREGISTRY);
+}
+
+void testSetOther()
+{
+    runsystem("reg import addtest.reg", ERROR_IMPORT_TESTREGISTRY);
+
+    string s;
+    unsigned long type;
+    unsigned char expected[] = { 0xdf, 0xb8, 0x47, 0xfd };
+    string sexpected((char*)expected, 4);
+    assert(winreg::setByteArrayFromBase64(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test REG_FULL_RESOURCE_DESCRIPTOR", "37hH/Q==", REG_FULL_RESOURCE_DESCRIPTOR), ERROR_SETOTHER);
+    assert(winreg::getAsByteArray(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test REG_FULL_RESOURCE_DESCRIPTOR", s, type), ERROR_SETOTHER);
+    assert(type == REG_FULL_RESOURCE_DESCRIPTOR, ERROR_SETOTHER);
+    assert(s.length() == 4, ERROR_SETOTHER);
+    assert(s == sexpected, ERROR_SETOTHER);
+    s = winreg::getAsBase64ByteArray(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test REG_FULL_RESOURCE_DESCRIPTOR", "", type);
+    assert(s == "37hH/Q==", ERROR_SETOTHER);
+
+    s.clear();
+    assert(winreg::setByteArrayFromBase64(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test REG_RESOURCE_REQUIREMENTS_LIST", "37hH/Q==", REG_RESOURCE_REQUIREMENTS_LIST), ERROR_SETOTHER);
+    assert(winreg::getAsByteArray(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test REG_RESOURCE_REQUIREMENTS_LIST", s, type), ERROR_SETOTHER);
+    assert(type == REG_RESOURCE_REQUIREMENTS_LIST, ERROR_SETOTHER);
+    assert(s.length() == 4, ERROR_SETOTHER);
+    assert(s == sexpected, ERROR_SETOTHER);
+    s = winreg::getAsBase64ByteArray(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test REG_RESOURCE_REQUIREMENTS_LIST", "", type);
+    assert(s == "37hH/Q==", ERROR_SETOTHER);
+
+    s.clear();
+    assert(winreg::setByteArrayFromBase64(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test REG_LINK", "37hH/Q==", REG_LINK), ERROR_SETOTHER);
+    assert(winreg::getAsByteArray(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test REG_LINK", s, type), ERROR_SETOTHER);
+    assert(type == REG_LINK, ERROR_SETOTHER);
+    assert(s.length() == 4, ERROR_SETOTHER);
+    assert(s == sexpected, ERROR_SETOTHER);
+    s = winreg::getAsBase64ByteArray(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test REG_LINK", "", type);
+    assert(s == "37hH/Q==", ERROR_SETOTHER);
+
+    s.clear();
+    assert(winreg::setByteArrayFromBase64(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test REG_NONE", "37hH/Q==", REG_NONE), ERROR_SETOTHER);
+    assert(winreg::getAsByteArray(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test REG_NONE", s, type), ERROR_SETOTHER);
+    assert(type == REG_NONE, ERROR_SETOTHER);
+    assert(s.length() == 4, ERROR_SETOTHER);
+    assert(s == sexpected, ERROR_SETOTHER);
+    s = winreg::getAsBase64ByteArray(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test REG_NONE", "", type);
+    assert(s == "37hH/Q==", ERROR_SETOTHER);
+
+    s.clear();
+    assert(winreg::setByteArrayFromBase64(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test REG_RESOURCE_LIST", "37hH/Q==", REG_RESOURCE_LIST), ERROR_SETOTHER);
+    assert(winreg::getAsByteArray(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test REG_RESOURCE_LIST", s, type), ERROR_SETOTHER);
+    assert(type == REG_RESOURCE_LIST, ERROR_SETOTHER);
+    assert(s.length() == 4, ERROR_SETOTHER);
+    assert(s == sexpected, ERROR_SETOTHER);
+    s = winreg::getAsBase64ByteArray(HKEY_LOCAL_MACHINE, L"Software\\winregtest", L"test REG_RESOURCE_LIST", "", type);
+    assert(s == "37hH/Q==", ERROR_SETOTHER);
 
     runsystem("reg import deltest.reg", ERROR_REMOVE_TESTREGISTRY);
 }
@@ -830,6 +940,9 @@ int testAll()
 
         testGetBinary();
         testSetBinary();
+
+        testGetOther();
+        testSetOther();
     }
     catch (int e)
     {

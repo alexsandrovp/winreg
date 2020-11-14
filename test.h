@@ -50,5 +50,7 @@ freely, subject to the following restrictions:
 #define ERROR_SETQWORD 305
 #define ERROR_GETBINARY 306
 #define ERROR_SETBINARY 307
+#define ERROR_GETOTHER 308
+#define ERROR_SETOTHER 309
 
 int testAll();

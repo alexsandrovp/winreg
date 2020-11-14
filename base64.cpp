@@ -18,6 +18,11 @@ freely, subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
+/*
+* Modifications:
+*	1. added stl wrappers
+*/
+
 #include "base64.h"
 
 static const unsigned char encodelookup[] = {
@@ -77,6 +82,33 @@ size_t get_buffer_size_for_decoding(size_t encoded_length)
 	return len;
 }
 */
+
+std::string b64encode(const char* data, size_t data_length)
+{
+	char* buffer = nullptr;
+	size_t len = base64_encode(data, data_length, &buffer, 1);
+	std::string ret(buffer, len);
+	delete[] buffer;
+	return ret;
+}
+
+std::string b64encode(std::string data)
+{
+	char* buffer = nullptr;
+	size_t len = base64_encode(data.c_str(), data.length(), &buffer, 1);
+	std::string ret(buffer, len);
+	delete[] buffer;
+	return ret;
+}
+
+std::string b64decode(std::string data)
+{
+	char* buffer = nullptr;
+	size_t len = base64_decode(data.c_str(), data.length(), &buffer);
+	std::string ret(buffer, len);
+	delete[] buffer;
+	return ret;
+}
 
 size_t base64_encode(const char* plain, size_t plain_length, char** encoded, int addPad)
 {
